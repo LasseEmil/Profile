@@ -54,6 +54,14 @@ python Stage/stage.py build --name local
 
 The command above refreshes `Source/WebSite/updates.html`, compiles the C++ WebAssembly module, and writes a complete static build (including `wasm/index.html`) to `Stage/Builds/local/`. Inspect that folder or serve it locally before committing; change `--name` to keep multiple build snapshots. The Pages workflow automatically uses the `github-pages` build name.
 
+To preview the staged output with a local HTTP server:
+
+```
+python Stage/stage.py webserver --name local --port 4173
+```
+
+This will run the same build pipeline and then launch `python -m http.server` rooted at `Stage/Builds/local/` so you can navigate to `http://localhost:4173/` (and `/wasm/`) for testing.
+
 
 
 ## Todo
