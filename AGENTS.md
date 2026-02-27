@@ -53,7 +53,7 @@ Profile/
 ```
 
 - **Source/**: Place all maintainable code, scripts, templates, and data files here. HTML/CSS live under `Source/WebSite/`; Markdown updates stay in `Source/Updates/Updates.md`; the C++ WASM module lives under `Source/WasmSite/`.
-- **Stage/**: Use for build tooling (`Stage/stage.py`, `Stage/Build/`) and generated artifacts (`Stage/Builds/`). Run `python Stage/stage.py build --name <build>` to refresh a build folder.
+- **Stage/**: Use for build tooling (`Stage/stage.py`, `Stage/Build/`) and generated artifacts (`Stage/Builds/`). Run `python Stage/stage.py build --name <build>` to refresh a build folder or `python Stage/stage.py webserver --name local --port 4173` for local previews.
 - **Stack/**: Store external dependencies downloaded at build time (e.g., Python venvs, node installs). The `Stack/Cpython` venv is pre-created; activate it with `source Stack/Cpython/bin/activate` before running Python tooling, then `pip install -r requirements.txt` as needed.
 
 Always follow the naming rules below when adding new directories/files inside those folders.
@@ -62,6 +62,7 @@ Always follow the naming rules below when adding new directories/files inside th
 - Markdown files and directory names: PascalCase (e.g., `ProfileNotes.md`, `AssetsLibrary/`).
 - Scripts, code files, and general filenames: lowercase `snake_case` (e.g., `generate_github_key.sh`, `content_parser.py`).
 - MIME-type specific assets default to `snake_case` as well (e.g., `site_styles.css`, `profile_image.png`).
+- Documentation rule: keep a single root `README.md`; any directory-level doc must be named after the directory itself (`Dir/Dir.md`).
 
 ## Updates workflow
 1. Edit `Source/Updates/Updates.md` and add a new `## YYYY-MM-DD – Title` section with bullet items (see README for example format).
@@ -70,7 +71,7 @@ Always follow the naming rules below when adding new directories/files inside th
 
 ## WASM workflow
 1. Ensure Emscripten (`emcc`) is installed locally (the CI workflow installs it automatically).
-2. Run `python Stage/stage.py build --name local` – this compiles `Source/WasmSite/main.cpp` into `Stage/Builds/local/wasm/`.
+2. Run `python Stage/stage.py build --name local` – this compiles `Source/WasmSite/main.cpp` into `Stage/Builds/local/wasm/`. Use `python Stage/stage.py webserver --name local --port 4173` for a live preview served via `http.server`.
 3. Review `Stage/Builds/local/wasm/index.html` in a browser and commit any source changes under `Source/WasmSite/`.
 
 ## Quick fix checklist

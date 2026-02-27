@@ -6,6 +6,9 @@ When running `python Stage/stage.py build` the script will:
 2. Copy the static site from `Source/WebSite/`.
 3. Compile the WebAssembly site from `Source/WasmSite/` via Emscripten.
 4. Emit everything to `Stage/Builds/<name>` with a `.nojekyll` marker.
+
+`python Stage/stage.py webserver` performs the build and then launches a
+local `http.server` rooted at the requested build directory for previewing.
 """
 
 from __future__ import annotations
@@ -82,6 +85,23 @@ def build(name: str) -> None:
     print(f"[stage] Built site at {build_dir}")
 
 
+def webserver(name: str, port: int) -> None:
+    build(name)
+    build_dir = BUILDS_ROOT / name
+    print(f"[stage] Serving {build_dir} at http://localhost:{port}")
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "http.server",
+            str(port),
+            "--directory",
+            str(build_dir),
+        ],
+        check=False,
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Stage build orchestrator")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -92,6 +112,20 @@ def parse_args() -> argparse.Namespace:
         default="local",
         help="Name of the build folder under Stage/Builds (default: local)",
     )
+    web_parser = subparsers.add_parser(
+        "webserver", help="Build (if needed) and serve via python -m http.server"
+    )
+    web_parser.add_argument(
+        "--name",
+        default="local",
+        help="Name of the build folder under Stage/Builds to serve (default: local)",
+    )
+    web_parser.add_argument(
+        "--port",
+        type=int,
+        default=4173,
+        help="Port for the local HTTP server (default: 4173)",
+    )
     return parser.parse_args()
 
 
@@ -99,6 +133,8 @@ def main() -> None:
     args = parse_args()
     if args.command == "build":
         build(args.name)
+    elif args.command == "webserver":
+        webserver(args.name, args.port)
     else:
         raise SystemExit(f"Unknown command: {args.command}")
 
