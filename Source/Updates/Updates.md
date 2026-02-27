@@ -1,3 +1,3 @@
 ## 2026-02-27 – Scaffold Refresh
-- Moved HTML/CSS into `Source/Website/`.
+- Moved HTML/CSS into `Source/WebSite/`.
 - Added GitHub Pages workflow and repo scaffold.

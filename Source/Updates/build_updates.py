@@ -3,7 +3,7 @@
 
 The converter is intentionally simple: it supports headings that start with
 "## " and bullet lists beginning with "- ". The output HTML snippet is
-written to `Source/Website/updates.html` so it can be injected into the
+written to `Source/WebSite/updates.html` so it can be injected into the
 homepage at runtime.
 """
 
@@ -14,7 +14,7 @@ import html
 from pathlib import Path
 
 DEFAULT_INPUT = Path("Source/Updates/Updates.md")
-DEFAULT_OUTPUT = Path("Source/Website/updates.html")
+DEFAULT_OUTPUT = Path("Source/WebSite/updates.html")
 
 
 def parse_args() -> argparse.Namespace:
