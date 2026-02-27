@@ -39,15 +39,19 @@ Keep the repo organized using three top-level service directories plus shared co
 ```
 Profile/
 ├─ AGENTS.md
-├─ requirements.txt          # Python tooling deps (pip install -r requirements.txt)
-├─ Source/                   # Site code, scripts, and data assets
-├─ Stage/                    # Build outputs, CI/CD artifacts, test reports
+├─ requirements.txt
+├─ Source/
+│  ├─ Updates/               # Markdown log + converter for personal updates
+│  └─ Website/               # HTML/CSS/JS served by GitHub Pages
+├─ Stage/
+│  ├─ Build/                 # Build scripts (run stage.py here)
+│  └─ Builds/                # Generated site builds (git-ignored)
 └─ Stack/
    └─ Cpython/               # Prebuilt Python virtual environment (source Stack/Cpython/bin/activate)
 ```
 
-- **Source/**: Place all maintainable code, scripts, templates, and data files here. HTML/CSS for the site now live under `Source/Website/`.
-- **Stage/**: Use for generated build artifacts, package bundles, CI/CD logs, and temporary outputs; clean between runs.
+- **Source/**: Place all maintainable code, scripts, templates, and data files here. HTML/CSS live under `Source/Website/`; Markdown updates live in `Source/Updates/Updates.md` before conversion.
+- **Stage/**: Use for build tooling (`Stage/Build/`) and generated artifacts (`Stage/Builds/`). Run `python Stage/Build/stage.py --name <build>` to refresh a build folder under `Stage/Builds/`.
 - **Stack/**: Store external dependencies downloaded at build time (e.g., Python venvs, node installs). The `Stack/Cpython` venv is pre-created; activate it with `source Stack/Cpython/bin/activate` before running Python tooling, then `pip install -r requirements.txt` as needed.
 
 Always follow the naming rules below when adding new directories/files inside those folders.
@@ -56,6 +60,11 @@ Always follow the naming rules below when adding new directories/files inside th
 - Markdown files and directory names: PascalCase (e.g., `ProfileNotes.md`, `AssetsLibrary/`).
 - Scripts, code files, and general filenames: lowercase `snake_case` (e.g., `generate_github_key.sh`, `content_parser.py`).
 - MIME-type specific assets default to `snake_case` as well (e.g., `site_styles.css`, `profile_image.png`).
+
+## Updates workflow
+1. Edit `Source/Updates/Updates.md` and add a new `## YYYY-MM-DD – Title` section with bullet items (see README for example format).
+2. Run `python Source/Updates/build_updates.py` (activate `Stack/Cpython` first if you install extra Python deps).
+3. Commit both the Markdown file and the generated `Source/Website/updates.html` so the homepage “Latest Updates” section stays in sync.
 
 ## Quick fix checklist
 - Push failing with `Permission denied (publickey)`? Run the two pre-flight commands again in that terminal and retry.

@@ -60,6 +60,14 @@
           </article>
         </div>
       </section>
+
+      <section class="section updates-section" id="updates">
+        <h2>Latest Updates</h2>
+        <div id="updates-feed" aria-live="polite">Loading personal updates…</div>
+        <p class="updates-fallback">
+          <noscript>Enable JavaScript to see the latest updates inline, or open <a href="updates.html">updates.html</a>.</noscript>
+        </p>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -67,5 +75,21 @@
         <p>© 2026 Alex Carter. Built for GitHub Pages.</p>
       </div>
     </footer>
+
+    <script>
+      (async () => {
+        const container = document.getElementById('updates-feed');
+        if (!container) return;
+        try {
+          const response = await fetch('updates.html', { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const html = await response.text();
+          container.innerHTML = html;
+        } catch (error) {
+          container.textContent = 'Unable to load updates at this time. Please refresh.';
+          console.error('Failed to load updates.html', error);
+        }
+      })();
+    </script>
   </body>
 </html>
