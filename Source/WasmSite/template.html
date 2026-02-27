@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alex Carter | WASM Companion</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="../index.html">Alex Carter</a>
+        <nav aria-label="Main navigation">
+          <ul class="nav-links">
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../research.html">Research</a></li>
+            <li><a href="../work.html">Current Work</a></li>
+            <li><a href="../blog.html">Blog</a></li>
+            <li><a href="../contact.html">Contact</a></li>
+            <li><a class="active" href="index.html">Wasm Site</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <p class="eyebrow">WASM</p>
+        <h1 id="wasm-hero-title">Loading…</h1>
+        <p id="wasm-hero-desc">Please wait while the WebAssembly module initializes.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="../index.html">Back to Main Site</a>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Highlights</h2>
+        <div id="wasm-highlights" class="card-grid"></div>
+      </section>
+
+      <section class="section">
+        <h2>Build Notes</h2>
+        <ul id="wasm-updates" class="post-list"></ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>© 2026 Alex Carter. WebAssembly companion build.</p>
+      </div>
+    </footer>
+
+    <script>
+      var Module = {
+        locateFile: function (path) {
+          return path;
+        },
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

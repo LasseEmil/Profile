@@ -42,16 +42,18 @@ Profile/
 ├─ requirements.txt
 ├─ Source/
 │  ├─ Updates/               # Markdown log + converter for personal updates
-│  └─ Website/               # HTML/CSS/JS served by GitHub Pages
+│  ├─ WebSite/               # HTML/CSS/JS served by GitHub Pages
+│  └─ WasmSite/              # C++ sources + template for the WASM companion
 ├─ Stage/
-│  ├─ Build/                 # Build scripts (run stage.py here)
-│  └─ Builds/                # Generated site builds (git-ignored)
+│  ├─ Build/                 # Helper scripts + docs for staging
+│  ├─ Builds/                # Generated site builds (git-ignored)
+│  └─ stage.py               # Orchestration entry point
 └─ Stack/
    └─ Cpython/               # Prebuilt Python virtual environment (source Stack/Cpython/bin/activate)
 ```
 
-- **Source/**: Place all maintainable code, scripts, templates, and data files here. HTML/CSS live under `Source/Website/`; Markdown updates live in `Source/Updates/Updates.md` before conversion.
-- **Stage/**: Use for build tooling (`Stage/Build/`) and generated artifacts (`Stage/Builds/`). Run `python Stage/Build/stage.py --name <build>` to refresh a build folder under `Stage/Builds/`.
+- **Source/**: Place all maintainable code, scripts, templates, and data files here. HTML/CSS live under `Source/WebSite/`; Markdown updates stay in `Source/Updates/Updates.md`; the C++ WASM module lives under `Source/WasmSite/`.
+- **Stage/**: Use for build tooling (`Stage/stage.py`, `Stage/Build/`) and generated artifacts (`Stage/Builds/`). Run `python Stage/stage.py build --name <build>` to refresh a build folder.
 - **Stack/**: Store external dependencies downloaded at build time (e.g., Python venvs, node installs). The `Stack/Cpython` venv is pre-created; activate it with `source Stack/Cpython/bin/activate` before running Python tooling, then `pip install -r requirements.txt` as needed.
 
 Always follow the naming rules below when adding new directories/files inside those folders.
@@ -63,8 +65,13 @@ Always follow the naming rules below when adding new directories/files inside th
 
 ## Updates workflow
 1. Edit `Source/Updates/Updates.md` and add a new `## YYYY-MM-DD – Title` section with bullet items (see README for example format).
-2. Run `python Source/Updates/build_updates.py` (activate `Stack/Cpython` first if you install extra Python deps).
-3. Commit both the Markdown file and the generated `Source/Website/updates.html` so the homepage “Latest Updates” section stays in sync.
+2. Run `python Source/Updates/build_updates.py` (activate `Stack/Cpython` first if you install extra Python deps) or simply run `python Stage/stage.py build --name local` to regenerate as part of staging.
+3. Commit both the Markdown file and the generated `Source/WebSite/updates.html` so the homepage “Latest Updates” section stays in sync.
+
+## WASM workflow
+1. Ensure Emscripten (`emcc`) is installed locally (the CI workflow installs it automatically).
+2. Run `python Stage/stage.py build --name local` – this compiles `Source/WasmSite/main.cpp` into `Stage/Builds/local/wasm/`.
+3. Review `Stage/Builds/local/wasm/index.html` in a browser and commit any source changes under `Source/WasmSite/`.
 
 ## Quick fix checklist
 - Push failing with `Permission denied (publickey)`? Run the two pre-flight commands again in that terminal and retry.

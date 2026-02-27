@@ -24,8 +24,13 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Install Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.56
+
       - name: Stage site build
-        run: python Stage/Build/stage.py --name github-pages
+        run: python Stage/stage.py build --name github-pages
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
