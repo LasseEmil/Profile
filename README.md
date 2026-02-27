@@ -15,6 +15,11 @@ This iteration now includes separate pages stored under `Source/Website/`:
 All pages share a common top navigation and stylesheet (`Source/Website/styles.css`).
 
 
+## Deployment
+
+GitHub Pages is deployed via `.github/workflows/pages.yml`, which copies `Source/Website/` into the Pages artifact and ships it with a `.nojekyll` file so the static assets publish without the Jekyll pipeline.
+
+
 
 ## Todo
 
