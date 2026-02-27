@@ -1,33 +1,62 @@
 # Profile Page
 
-Personal blog/portfolio website for GitHub Pages.
+WebAssembly-first personal site for Lasse Emil. The GitHub Pages build serves the WASM app shell, which swaps page fragments, streams blog posts, and fetches personal updates.
 
-## Current Structure
+## Repository Tree
 
-Primary site content lives under `Source/WebSite/`:
-- `Source/WebSite/index.html` (home)
-- `Source/WebSite/about.html`
-- `Source/WebSite/research.html`
-- `Source/WebSite/work.html`
-- `Source/WebSite/blog.html`
-- `Source/WebSite/contact.html`
+```
+Profile/
+|-- README.md                     # High-level overview (this file)
+|-- AGENTS.md                     # Codex runtime guidance + conventions
+|-- requirements.txt              # Python deps for staging/utilities
+|-- .gitignore                    # Ignores builds, venvs, artifacts
+|-- .github/
+|   `-- workflows/
+|       `-- pages.yml            # GitHub Pages CI (build + deploy)
+|-- Source/
+|   |-- Source.md                # Documentation for the Source tree
+|   |-- Updates/
+|   |   |-- Updates.md           # Markdown changelog/personal feed
+|   |   `-- build_updates.py     # Converts Markdown log to HTML
+|   |-- WebSite/
+|   |   |-- styles.css           # Shared styling for the WASM shell
+|   |   `-- updates.html         # Generated updates feed (checked in)
+|   `-- WasmSite/
+|       |-- README.md            # Dev notes for the WebAssembly app
+|       |-- main.cpp             # SPA runtime + content renderer
+|       `-- template.html        # HTML shell consumed by emcc
+|-- Stage/
+|   |-- Stage.md                 # Docs covering staging workflows
+|   |-- stage.py                 # Build orchestrator + dev server
+|   |-- Build/
+|   |   `-- README.md            # Extra notes for build helpers
+|   `-- Builds/                  # Git-ignored staged artifacts
+|-- Stack/
+|   |-- Stack.md                 # Dependency/stack documentation
+|   `-- Cpython/                 # Virtualenv home for tooling
+`-- Source/WebSite/styles.css    # Convenience pointer for editors
+```
 
-All pages share a common navigation and stylesheet (`Source/WebSite/styles.css`) and now link to the WebAssembly companion at `wasm/index.html`.
+## Architecture
 
-Supporting directories:
-- `Source/Updates/` – Markdown log plus converter script for personal updates.
-- `Source/WasmSite/` – C++ + template files compiled to WebAssembly.
-- `Stage/stage.py` – orchestration entry point (`python Stage/stage.py build --name local`).
-- `Stage/Build/` – extra build helpers and documentation.
-- `Stage/Builds/` – git-ignored build outputs written by the staging pipeline.
+- **WebAssembly shell** – `Source/WasmSite/main.cpp` + `template.html` render every route (blog, projects, about, research, work, contact). The compiled `index.{html,js,wasm}` becomes the GitHub Pages entrypoint.
+- **Shared assets** – `Source/WebSite/` holds the CSS shared by both the WASM bundle and any generated HTML snippets. `updates.html` is produced from Markdown and fetched at runtime.
+- **Content feeds** – `Source/Updates/Updates.md` is the canonical update log. `build_updates.py` converts it to HTML so the WASM runtime can `fetch` the feed on load.
+- **Stage orchestration** – `Stage/stage.py` runs three phases (`updates`, `static copy`, `emcc`). The script also exposes `webserver` for local previews via `python -m http.server` rooted at `Stage/Builds/<name>/`.
+- **CI/CD** – `.github/workflows/pages.yml` provisions Python + Emscripten, runs `python Stage/stage.py build --name github-pages`, and publishes `Stage/Builds/github-pages/` to GitHub Pages with `.nojekyll`.
 
-### Personal updates
+## Navigation & routing
 
-- Log dated entries in `Source/Updates/Updates.md`.
-- Run `python Source/Updates/build_updates.py` (or rely on `Stage/stage.py build`) to generate `Source/WebSite/updates.html`.
-- The homepage automatically fetches `updates.html` and displays the latest items in the “Latest Updates” section.
+- Blog is the default landing view. Navigation links emit `load_page` calls into the WASM module, which swaps page fragments without a full reload.
+- The shell synchronizes browser history: hashes (e.g., `#/projects`) map to internal routes, while `popstate` replays the correct WASM render so the browser Back/Forward buttons work as expected.
+- Projects are populated from the `PROJECTS` array inside `Source/WasmSite/main.cpp`. Clicking a card loads a detail page that reuses the same struct data.
 
-Example entry:
+## Blog feed & personal updates
+
+- `BLOG_LIBRARY` in `template.html` defines seed posts. The client duplicates these entries to create an infinite-scroll experience using an `IntersectionObserver` sentinel.
+- Updates: add Markdown entries to `Source/Updates/Updates.md`, then run either `python Source/Updates/build_updates.py` directly or any `Stage/stage.py build` target. The generated `updates.html` is committed so GitHub Pages can serve it as a static asset.
+
+Example Markdown entry:
 
 ```
 ## 2026-03-01 – Shipped Dark Mode
@@ -35,35 +64,18 @@ Example entry:
 - Wrote a quick note about our theming approach.
 ```
 
+## Building & previewing
 
-### WebAssembly companion
-
-- Source lives in `Source/WasmSite/main.cpp` with a custom shell template (`template.html`).
-- Requires the Emscripten SDK (`emcc` on `PATH`). The staging pipeline compiles it automatically; to test manually run `emcc Source/WasmSite/main.cpp --shell-file Source/WasmSite/template.html -O2 -o wasm/index.html`.
-- Output is placed under `wasm/` inside each staged build so the main nav can link to `wasm/index.html`.
-
-## Deployment
-
-GitHub Pages is deployed via `.github/workflows/pages.yml`, which installs Emscripten, runs `python Stage/stage.py build --name github-pages`, and uploads `Stage/Builds/github-pages/` (which already contains `.nojekyll`).
-
-### Staging builds locally
+Create a local artifact named `local`:
 
 ```
 python Stage/stage.py build --name local
 ```
 
-The command above refreshes `Source/WebSite/updates.html`, compiles the C++ WebAssembly module, and writes a complete static build (including `wasm/index.html`) to `Stage/Builds/local/`. Inspect that folder or serve it locally before committing; change `--name` to keep multiple build snapshots. The Pages workflow automatically uses the `github-pages` build name.
-
-To preview the staged output with a local HTTP server:
+Preview over HTTP after building:
 
 ```
 python Stage/stage.py webserver --name local --port 4173
 ```
 
-This will run the same build pipeline and then launch `python -m http.server` rooted at `Stage/Builds/local/` so you can navigate to `http://localhost:4173/` (and `/wasm/`) for testing.
-
-
-
-## Todo
-
-update here
+`stage.py` refreshes `Source/WebSite/updates.html`, compiles the C++ to WASM via `emcc`, and copies everything into `Stage/Builds/<name>/` with a `.nojekyll` marker. The GitHub Actions workflow runs the same command with `--name github-pages`, so keeping that build target reproducible locally ensures Pages deploys cleanly.

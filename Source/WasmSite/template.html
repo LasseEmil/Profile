@@ -3,59 +3,308 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Alex Carter | WASM Companion</title>
-    <link rel="stylesheet" href="../styles.css" />
+    <title>Lasse Emil | WebAssembly Experience</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="site-header">
+    <header class="site-header app-shell" id="app-shell">
       <div class="container nav-wrap">
-        <a class="brand" href="../index.html">Alex Carter</a>
-        <nav aria-label="Main navigation">
+        <a class="brand" href="#" data-page="blog">Lasse Emil</a>
+        <nav aria-label="Primary navigation">
           <ul class="nav-links">
-            <li><a href="../about.html">About</a></li>
-            <li><a href="../research.html">Research</a></li>
-            <li><a href="../work.html">Current Work</a></li>
-            <li><a href="../blog.html">Blog</a></li>
-            <li><a href="../contact.html">Contact</a></li>
-            <li><a class="active" href="index.html">Wasm Site</a></li>
+            <li><a href="#" data-page="blog" class="active">Blog</a></li>
+            <li><a href="#" data-page="projects">Projects</a></li>
+            <li><a href="#" data-page="about">About</a></li>
+            <li><a href="#" data-page="research">Research</a></li>
+            <li><a href="#" data-page="work">Work</a></li>
+            <li><a href="#" data-page="contact">Contact</a></li>
           </ul>
         </nav>
       </div>
     </header>
 
-    <main class="container">
-      <section class="hero">
-        <p class="eyebrow">WASM</p>
-        <h1 id="wasm-hero-title">Loading…</h1>
-        <p id="wasm-hero-desc">Please wait while the WebAssembly module initializes.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="../index.html">Back to Main Site</a>
-        </div>
-      </section>
-
-      <section class="section">
-        <h2>Highlights</h2>
-        <div id="wasm-highlights" class="card-grid"></div>
-      </section>
-
-      <section class="section">
-        <h2>Build Notes</h2>
-        <ul id="wasm-updates" class="post-list"></ul>
-      </section>
-    </main>
+    <main id="app-root" class="container app-content" aria-live="polite"></main>
 
     <footer class="site-footer">
       <div class="container">
-        <p>© 2026 Alex Carter. WebAssembly companion build.</p>
+        <p>© 2026 Lasse Emil. Powered by a WebAssembly build. <a href="https://github.com/LasseEmil/Profile" target="_blank" rel="noopener">Source on GitHub</a>.</p>
       </div>
     </footer>
 
     <script>
+      const VALID_PAGES = new Set(['blog', 'projects', 'about', 'research', 'work', 'contact']);
+      const BLOG_LIBRARY = [
+        {
+          title: 'Shipping a WebAssembly-first personal site',
+          summary: 'Porting the portfolio to WASM, wiring CI, and keeping the UX friendly.',
+          topic: 'Engineering',
+          tags: ['WASM', 'Portfolio'],
+          readTime: '6 min',
+        },
+        {
+          title: 'Taming multi-model routing with GatewayAI',
+          summary: 'Notes on routing requests across providers without exploding latency.',
+          topic: 'AI Delivery',
+          tags: ['GatewayAI', 'Routing'],
+          readTime: '5 min',
+        },
+        {
+          title: 'ComputeAI experiments in elastic batching',
+          summary: 'How combining inference + background workloads saved 30% spend.',
+          topic: 'Systems',
+          tags: ['ComputeAI', 'Scheduling'],
+          readTime: '7 min',
+        },
+        {
+          title: 'Observability narratives with HarnessAI',
+          summary: 'Turning raw deployment metrics into readable briefs for humans.',
+          topic: 'Product',
+          tags: ['HarnessAI', 'Telemetry'],
+          readTime: '4 min',
+        },
+        {
+          title: 'SecbondBrain research log',
+          summary: 'Capturing incident knowledge so security teams answer faster.',
+          topic: 'Security',
+          tags: ['SecbondBrain', 'Knowledge'],
+          readTime: '3 min',
+        },
+        {
+          title: 'Designing infinite scrolling feeds that still feel fast',
+          summary: 'Practical heuristics for chunking content without exhausting the DOM.',
+          topic: 'UX Notes',
+          tags: ['Frontend', 'Performance'],
+          readTime: '8 min',
+        },
+      ];
+      const BLOG_BATCH_SIZE = 5;
+      let blogObserver = null;
+      let blogNextIndex = 0;
+
+      const initialPage = pageFromLocation();
+      let pendingPage = initialPage;
+
+      updateHistory(initialPage, 'replace');
+      setActiveNav(initialPage);
+
       var Module = {
         locateFile: function (path) {
           return path;
         },
+        onRuntimeInitialized: function () {
+          const initial = pendingPage || 'blog';
+          pendingPage = null;
+          loadPage(initial, { syncHistory: false, replace: true });
+        },
       };
+
+      window.addEventListener('popstate', (event) => {
+        const target = event.state?.page || pageFromLocation();
+        loadPage(target, { syncHistory: false });
+      });
+
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('[data-page]');
+        if (link) {
+          event.preventDefault();
+          loadPage(link.dataset.page);
+          return;
+        }
+        const projectCard = event.target.closest('[data-project]');
+        if (projectCard) {
+          event.preventDefault();
+          loadPage(`project-${projectCard.dataset.project}`);
+        }
+      });
+
+      window.onWasmPageLoad = (page) => {
+        if (page === 'blog') {
+          requestAnimationFrame(initializeBlogFeed);
+        } else {
+          teardownBlogFeed();
+        }
+      };
+
+      function loadPage(page, options = {}) {
+        const normalized = normalizePage(page);
+        const ready = Module && typeof Module.ccall === 'function';
+        if (!ready) {
+          pendingPage = normalized;
+        } else {
+          Module.ccall('load_page', null, ['string'], [normalized]);
+        }
+        setActiveNav(normalized);
+        if (options.syncHistory !== false) {
+          updateHistory(normalized, options.replace ? 'replace' : 'push');
+        }
+      }
+
+      function normalizePage(page) {
+        if (!page) {
+          return 'blog';
+        }
+        if (page.startsWith('project-')) {
+          return page;
+        }
+        const lower = page.toLowerCase();
+        return VALID_PAGES.has(lower) ? lower : 'blog';
+      }
+
+      function pageFromLocation() {
+        const hash = window.location.hash.replace(/^#\/?/, '');
+        if (hash) {
+          return normalizePage(hash);
+        }
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('page')) {
+          return normalizePage(params.get('page'));
+        }
+        return 'blog';
+      }
+
+      function updateHistory(page, mode) {
+        if (!window.history || typeof window.history[mode === 'replace' ? 'replaceState' : 'pushState'] !== 'function') {
+          return;
+        }
+        const normalized = normalizePage(page);
+        const url = new URL(window.location.href);
+        url.hash = normalized ? `/${normalized}` : '';
+        const state = { page: normalized };
+        if (mode === 'replace') {
+          window.history.replaceState(state, '', url);
+        } else {
+          window.history.pushState(state, '', url);
+        }
+      }
+
+      function setActiveNav(page) {
+        const target = page.startsWith('project-') ? 'projects' : page;
+        document.querySelectorAll('.nav-links [data-page]').forEach((link) => {
+          link.classList.toggle('active', link.dataset.page === target);
+        });
+      }
+
+      function initializeBlogFeed() {
+        const feed = document.getElementById('blog-feed');
+        if (!feed) {
+          return;
+        }
+        blogNextIndex = 0;
+        feed.innerHTML = '';
+        const list = document.createElement('ul');
+        list.className = 'post-list';
+        list.id = 'blog-post-list';
+        feed.appendChild(list);
+        const sentinel = document.createElement('div');
+        sentinel.id = 'blog-sentinel';
+        sentinel.className = 'scroll-sentinel';
+        sentinel.textContent = 'Scroll for more posts ↓';
+        feed.appendChild(sentinel);
+        appendBlogBatch(BLOG_BATCH_SIZE * 2);
+        setupBlogInfiniteScroll();
+      }
+
+      function teardownBlogFeed() {
+        if (blogObserver) {
+          blogObserver.disconnect();
+          blogObserver = null;
+        }
+      }
+
+      function appendBlogBatch(count = BLOG_BATCH_SIZE) {
+        const list = document.getElementById('blog-post-list');
+        if (!list) {
+          return;
+        }
+        for (let i = 0; i < count; i += 1) {
+          const post = createBlogPost(blogNextIndex++);
+          list.appendChild(renderBlogPost(post));
+        }
+      }
+
+      function setupBlogInfiniteScroll() {
+        const sentinel = document.getElementById('blog-sentinel');
+        if (!sentinel) {
+          return;
+        }
+        if (blogObserver) {
+          blogObserver.disconnect();
+        }
+        blogObserver = new IntersectionObserver(
+          (entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+              appendBlogBatch();
+            }
+          },
+          { rootMargin: '0px 0px 200px 0px' }
+        );
+        blogObserver.observe(sentinel);
+      }
+
+      function createBlogPost(index) {
+        const template = BLOG_LIBRARY[index % BLOG_LIBRARY.length];
+        const cycle = Math.floor(index / BLOG_LIBRARY.length);
+        const title = cycle === 0 ? template.title : `${template.title} · Update ${cycle + 1}`;
+        const summary =
+          cycle === 0
+            ? template.summary
+            : `${template.summary} (Iteration ${cycle + 1}).`;
+        return {
+          title,
+          summary,
+          topic: template.topic,
+          tags: template.tags,
+          readTime: template.readTime,
+          date: formatBlogDate(index),
+        };
+      }
+
+      function formatBlogDate(index) {
+        const date = new Date();
+        date.setDate(date.getDate() - index * 3);
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      }
+
+      function renderBlogPost(post) {
+        const item = document.createElement('li');
+        const body = document.createElement('div');
+        const eyebrow = document.createElement('p');
+        eyebrow.className = 'eyebrow';
+        eyebrow.textContent = post.topic;
+        const heading = document.createElement('h3');
+        heading.textContent = post.title;
+        const summary = document.createElement('p');
+        summary.textContent = post.summary;
+        body.appendChild(eyebrow);
+        body.appendChild(heading);
+        body.appendChild(summary);
+        if (post.tags?.length) {
+          const tags = document.createElement('div');
+          tags.className = 'post-tags';
+          post.tags.forEach((tag) => {
+            const pill = document.createElement('span');
+            pill.className = 'post-tag';
+            pill.textContent = tag;
+            tags.appendChild(pill);
+          });
+          body.appendChild(tags);
+        }
+        const meta = document.createElement('div');
+        meta.className = 'post-meta';
+        const date = document.createElement('span');
+        date.textContent = post.date;
+        const readTime = document.createElement('span');
+        readTime.textContent = `${post.readTime} read`;
+        meta.appendChild(date);
+        meta.appendChild(readTime);
+        item.appendChild(body);
+        item.appendChild(meta);
+        return item;
+      }
     </script>
     {{{ SCRIPT }}}
   </body>

@@ -20,6 +20,10 @@ body {
   line-height: 1.6;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .container {
   width: min(100% - 2rem, 980px);
   margin-inline: auto;
@@ -31,6 +35,17 @@ body {
   backdrop-filter: blur(8px);
   background: rgb(9 13 26 / 82%);
   border-bottom: 1px solid var(--border);
+  z-index: 1000;
+}
+
+.app-shell {
+  position: sticky;
+  top: 0;
+}
+
+.app-content {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
 }
 
 .nav-wrap {
@@ -145,6 +160,49 @@ li {
   padding: 1rem;
 }
 
+.project-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.project-card {
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.project-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.project-meta {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.project-meta li {
+  margin-bottom: 0.25rem;
+}
+
+.project-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.template-section pre {
+  background: #050812;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.75rem;
+  overflow: auto;
+}
+
 .updates-section {
   border: 1px solid var(--border);
   border-radius: 1rem;
@@ -201,6 +259,46 @@ li {
   background: var(--panel);
 }
 
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.post-tag {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: rgba(118, 169, 255, 0.1);
+}
+
+.post-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 0.35rem;
+  min-width: 140px;
+}
+
+.post-meta span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.scroll-sentinel {
+  margin-top: 1rem;
+  text-align: center;
+  padding: 0.8rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.7rem;
+}
+
 a {
   color: var(--accent);
 }
@@ -225,5 +323,11 @@ a {
 
   .post-list li {
     flex-direction: column;
+  }
+
+  .post-meta {
+    align-items: flex-start;
+    text-align: left;
+    min-width: auto;
   }
 }
