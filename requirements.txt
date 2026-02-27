@@ -1,0 +1,2 @@
+# Add Python dependencies for build/test tooling here.
+# Example: beautifulsoup4==4.12.3
