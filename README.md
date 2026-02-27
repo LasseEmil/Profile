@@ -1,4 +1,4 @@
-# Powerrush.github.io
+# Profile Page
 
 Personal blog/portfolio website for GitHub Pages.
 
@@ -13,3 +13,9 @@ This iteration now includes separate pages:
 - `contact.html`
 
 All pages share a common top navigation and stylesheet (`styles.css`).
+
+
+
+## Todo
+
+update here
