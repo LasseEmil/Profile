@@ -1,4 +1,4 @@
-# Powerrush.github.io
+# Profile Page
 
 Personal blog/portfolio website for GitHub Pages.
 
