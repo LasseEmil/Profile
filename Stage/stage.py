@@ -66,6 +66,8 @@ def build_wasm_site(out_dir: Path) -> None:
         "ASSERTIONS=1",
         "-s",
         "ENVIRONMENT=web",
+        "-s",
+        "EXPORTED_RUNTIME_METHODS=['ccall']",
         "-o",
         str(out_dir / "index.html"),
     ]
@@ -82,6 +84,10 @@ def build(name: str) -> None:
     (build_dir / ".nojekyll").touch()
     wasm_dir = build_dir / "wasm"
     build_wasm_site(wasm_dir)
+    for artifact in ("index.html", "index.js", "index.wasm"):
+        src = wasm_dir / artifact
+        if src.exists():
+            shutil.copy2(src, build_dir / artifact)
     print(f"[stage] Built site at {build_dir}")
 
 
